@@ -1,4 +1,6 @@
 { nixpkgsFunc ? import ./nixpkgs
+, globalExtensions ? _: _: {}
+, haskellExtensions ? _: _: _: {}
 , system ? builtins.currentSystem
 , config ? {}
 , enableLibraryProfiling ? false
@@ -24,7 +26,7 @@ let iosSupport =
           sha256 = "1jdzl5fyp1qcsi1anjig6kglq4jjsdll53nissjcnxpy3jscmarm";
         };
       };
-    };
+    } // globalExtensions self super;
     nixpkgs = nixpkgsFunc ({
       inherit system;
       overlays = [globalOverlay];
@@ -360,7 +362,8 @@ let overrideCabal = pkg: f: if pkg == null then null else haskellLib.overrideCab
           }) {};
       } // (if enableLibraryProfiling then {
         mkDerivation = expr: super.mkDerivation (expr // { enableLibraryProfiling = true; });
-      } else {});
+      } else {})
+        // haskellExtensions nixpkgs self super;
     };
     haskellOverlays = import ./haskell-overlays {
       inherit
